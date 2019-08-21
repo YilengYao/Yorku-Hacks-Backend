@@ -2,7 +2,6 @@
 <html lang="en">
 <?php include("includes/header.php"); ?>
 <body>
-<!--
 <div class="container">
 
 	<div class="row">
@@ -54,5 +53,4 @@
 			</div>
 	</div>
 </body>
--->
 </html>
