@@ -13,7 +13,7 @@
 		<div class="col-lg-6 col-lg-offset-3">
 
 	
-								
+		<h1 class="text-center"><?php display_message();?></h1>				
 		</div>
 	</div>
     	<div class="row">

@@ -51,6 +51,18 @@
         return row_count($result) > 0;
     }
 
+    function send_email($email, $subject, $message, $headers) {
+        return mail($email, $subject, $message, $headers);
+    }
+
+    function email_header($from) {
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type: text/html; charset=iso-8859-1" . "\r\n";
+        $headers .= "From: {$from}" . "\r\n" .
+        "Reply-To: {$from}" . "\r\n" .
+        "X-Mailer: PHP/" . phpversion();
+        return $headers;
+    }
 
     /************validate_user_registration ******************/
     function validate_user_registration() {
@@ -132,6 +144,12 @@
                 }
             } else {
                 if(register_user($first_name, $last_name, $username, $email, $password)){
+                     set_message(success_message("Congratulations " . $username . " has been registered! Please check your email or spam forlder for the link to activate your account."));
+                    redirect("login.php");
+                } else {
+                    // we need to handle this later this later
+                    set_message(success_message("Sorry " . $username . " cannot be registered! Please email."));
+                    redirect("login.php");
                 }
             }
         }
@@ -139,6 +157,7 @@
 
     }
 
+/**************************Register User *******************************/
     function register_user($first_name, $last_name, $username, $email, $password) {
         $first_name       = escape($_POST['first_name']);
         $last_name        = escape($_POST['last_name']);
@@ -157,9 +176,27 @@
             $sql .= "VALUES ('{$first_name}', '{$last_name}', '{$username}', '{$email}', '{$password}', '{$validation_code}',  0)";
             $result = query($sql);
             confirm($result);
-            echo success_message("Congratulations " . $username . " has been registered!");
+            $subject = "Activate Account";
+            $message = "Please click the link below to activate your Account
+            
+            http://localhost/yorkuhacks/activate.php?email={$email}&code={$validation_code}
+            ";
+
+
+            $headers = email_header("noreply@yorkuhacks.ca");
+            send_email($email, $usbject, $message, $headers);
             return true;
         }
 
     }
+
+/******************Activate User *************************/
+function activate_user() {
+    if($_SERVER['REQUEST_METHOD'] == "GET") {
+        if(isset($_GET['email'])) {
+            echo $email = clean($_GET['email']);
+            echo $validation_code = clean($_GET['code']);
+        }
+    }
+}
 ?>
