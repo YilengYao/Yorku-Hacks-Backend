@@ -184,7 +184,7 @@
 
 
             $headers = email_header("noreply@yorkuhacks.ca");
-            send_email($email, $usbject, $message, $headers);
+            send_email($email, $subject, $message, $headers);
             return true;
         }
 
