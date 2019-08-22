@@ -179,7 +179,7 @@
             $subject = "Activate Account";
             $message = "Please click the link below to activate your Account
             
-            http://yorkuhacks/login/activate.php?email={$email}&code={$validation_code}
+            http://yorkuhacks.ca/login/activate.php?email={$email}&code={$validation_code}
             ";
 
 
