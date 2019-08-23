@@ -45,8 +45,21 @@
         </div>';
     }
 
+    function error_message($error_message) {
+        return '
+        <div class="alert alert-danger" role="alert">
+            ' . $error_message . '
+        </div>';
+    }
+
     function row_exists($column, $value) {
         $sql = "SELECT * FROM users WHERE $column = '{$value}'";
+        $result = query($sql);
+        return row_count($result) > 0;
+    }
+
+    function user_exists($email, $validation_code) {
+        $sql = "SELECT * FROM users WHERE email = '{$email}' AND validation_code = '{$validation_code}'";
         $result = query($sql);
         return row_count($result) > 0;
     }
@@ -144,7 +157,7 @@
                 }
             } else {
                 if(register_user($first_name, $last_name, $username, $email, $password)){
-                     set_message(success_message("Congratulations " . $username . " has been registered! Please check your email or spam forlder for the link to activate your account."));
+                     set_message(success_message("Congratulations " . $username . " has been registered! Please check your email or spam folder for the link to activate your account."));
                     redirect("login.php");
                 } else {
                     // we need to handle this later this later
@@ -179,7 +192,7 @@
             $subject = "Activate Account";
             $message = "Please click the link below to activate your Account
             
-            http://yorkuhacks.ca/login/activate.php?email={$email}&code={$validation_code}
+            http://localhost/yorkuhacks/activate.php?email={$email}&code={$validation_code}
             ";
 
 
@@ -194,9 +207,102 @@
 function activate_user() {
     if($_SERVER['REQUEST_METHOD'] == "GET") {
         if(isset($_GET['email'])) {
-            echo $email = clean($_GET['email']);
-            echo $validation_code = clean($_GET['code']);
+            $email = clean($_GET['email']);
+            $validation_code = clean($_GET['code']);
+            
+            if(user_exists(escape($email), escape($validation_code))) {
+                $email = escape($email);
+                $validation_code = escape($validation_code);
+            $sql_validate = "UPDATE users SET active = 1, validation_code = -255 WHERE email = '{$email}' AND validation_code = '{$validation_code}'";
+                $result = query($sql_validate);
+                confirm($result);
+                set_message(success_message("Congratulations $email has been activated please login."));
+                redirect("login.php");
+            } else {
+                set_message(error_message("Sorry! Your account could not be activated."));
+            }
+        } 
+    }
+   redirect("login.php");
+}
+
+/*****************Validate User Login****************************/
+
+    function validate_user_login() {
+        $min = 5;
+        $max = 254;
+        $errors = [];
+        if($_SERVER['REQUEST_METHOD'] == "POST") {
+            $email            = clean($_POST['email']);
+            $password         = clean($_POST['password']);
+
+            if(strlen($email) < $min || strlen($email) > $max) {
+                $errors[] = "Your email cannot be less than {$min} or more than {$max} characters";
+            }
+        
+            if(empty($email)) {
+                $errors[] = "Email field cannot be empty";
+            }
+        
+            if(strlen($password) < $min || strlen($password) > $max) {
+                $errors[] = "Your password cannot be less than {$min} or more than {$max} characters";
+            }
+        
+            if(empty($password)) {
+                $errors[] = "Password field cannot be empty";
+            }
+        
+            if(!empty($errors)) {
+                foreach($errors as $error) {
+                    echo Validation_errors($error);
+                }
+            } else {
+                if(login_user($email, $password)) {
+                    redirect('candidate.php');
+                } else {
+                    echo validation_errors("Your email or password are not correct.");
+                }
+            }
+        }
+
+
+    }
+
+
+/**************User Login Functions *********************/
+    function login_user($email, $password) {
+        $email = escape($email);
+        $password = escape($password);
+        $sql = "SELECT * FROM users WHERE email = '{$email}' AND active = 1";
+        $result = query($sql);
+
+        if(row_count($result) == 1) {
+            $row = fetch_array($result);
+            $db_password = $row['password'];
+            if(md5($password) === $db_password) {  
+                /* To keep our user logged in and identify the user */
+                $_SESSION['email'] = $email;
+                $_SESSION['username'] = $row['username'];
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
         }
     }
-}
+
+/*********************Persistent login function ************************/
+    function logged_in() {
+        if(isset($_SESSION['email'])) {
+            return true;
+        } else {
+
+            return false;
+        }
+    }
+
+    function logged_out() {
+        session_destroy();
+    }
 ?>

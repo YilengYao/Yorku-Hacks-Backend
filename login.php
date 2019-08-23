@@ -4,7 +4,11 @@
 <body>
 
 <?php include("includes/nav.php") ?>
-	
+<?php 	
+	if (logged_in()) {
+			redirect("candidate.php");
+	}
+?>
 <div class="container">
 
 	
@@ -13,7 +17,8 @@
 		<div class="col-lg-6 col-lg-offset-3">
 
 	
-		<h1 class="text-center"><?php display_message();?></h1>				
+		<h1 class="text-center"><?php display_message();?></h1>	
+		<?php validate_user_login() ?>			
 		</div>
 	</div>
     	<div class="row">
