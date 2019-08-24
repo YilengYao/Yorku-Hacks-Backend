@@ -24,7 +24,8 @@
     }
 
     function token_generator() {
-        $token = md5(uniqid(mt_rand(), true));
+        $token = $_SESSION['token'] = md5(uniqid(mt_rand(), true));
+        return $token;
     }
 
     function validation_errors($error_message) {
@@ -185,8 +186,8 @@
 
             $validation_code = md5($username + microtime());
             
-            $sql = "INSERT INTO users (first_name, last_name, username, email, password, validation_code, active) ";
-            $sql .= "VALUES ('{$first_name}', '{$last_name}', '{$username}', '{$email}', '{$password}', '{$validation_code}',  0)";
+            $sql = "INSERT INTO users (first_name, last_name, username, email, password, validation_code, active, number_submissions) ";
+            $sql .= "VALUES ('{$first_name}', '{$last_name}', '{$username}', '{$email}', '{$password}', '{$validation_code}',  0, 0)";
             $result = query($sql);
             confirm($result);
             $subject = "Activate Account";
@@ -213,7 +214,7 @@ function activate_user() {
             if(user_exists(escape($email), escape($validation_code))) {
                 $email = escape($email);
                 $validation_code = escape($validation_code);
-            $sql_validate = "UPDATE users SET active = 1, validation_code = -255 WHERE email = '{$email}' AND validation_code = '{$validation_code}'";
+            $sql_validate = "UPDATE users SET active = 1 WHERE email = '{$email}' AND validation_code = '{$validation_code}'";
                 $result = query($sql_validate);
                 confirm($result);
                 set_message(success_message("Congratulations $email has been activated please login."));
@@ -304,5 +305,90 @@ function activate_user() {
 
     function logged_out() {
         session_destroy();
+    }
+
+/****************Recover Password *************/
+    function recover_password() {
+        if($_SERVER['REQUEST_METHOD'] == "POST") {
+            /* return back to login page if you don't want to recover password */
+            if(isset($_POST['cancel-submit'])) {
+                redirect('login.php');
+            }
+
+
+
+            /* send password reset email */
+            if(isset($_SESSION['token']) && $_POST['token'] === $_SESSION['token']) {
+                $email = clean($_POST['email']);
+
+                if(row_exists("email", $email)) {
+                    $email = escape($email);
+    
+                    $validation_code = md5($email + microtime());
+                    $validation_code = escape($validation_code);
+                    setcookie('temp_access_code', $validation_code, time() + 600);
+                    $sql = "UPDATE users SET validation_code = '{$validation_code}' WHERE email = '{$email}'";
+                    $result = query($sql);
+                    confirm($result);
+                    $subject = "Pleaser reset your password";
+                    $message = " Here is your password reset {$validation_code}
+
+                    Click here to reset your password http://localhost/yorkuhacks/reset.php?email={$email}&code={$validation_code}
+                    
+                    You validation code is only valid for 10 minutes.";
+                    $header = "From: noreply@yorkuhacks.ca";
+                    if(send_email($email, $subject, $message, $header)) {
+                        echo success_message("Please check your email or spam folder for the link to reset your password.");
+                        redirect("login.php");
+                    } else {
+                        echo validation_errors("Email could not be sent ");
+                    }
+                } else {
+                    echo validation_errors("The user with this email does not exist.");
+                }
+            } else {
+                redirect('login.php');
+            }
+        }
+    }
+
+/******************* Reset Password **********************/
+    function reset_password() {
+        $min = 5;
+        $max = 254;
+        if(!isset($_COOKIE['temp_access_code'])) {
+            echo error_message("Sorry your validation token has expired");
+           redirect('recover.php');
+        }
+        if($_SERVER['REQUEST_METHOD'] == "POST") {
+            if($_POST["password"] != $_POST["confirm_password"]) {
+                echo error_message("Password and Confirm Password don't match.");
+            } elseif (strlen($_POST["password"]) < $min || strlen($_POST["password"]) > $max) {
+                echo error_message("Your password cannot be less than {$min} or more than {$max} characters");
+            } else {
+                if(isset($_POST['reset-password-submit'])) {
+                    if(isset($_GET['email']) && isset($_GET['code'])) {
+                        $validation_code = escape(clean($_GET['code']));
+                        $email = escape(clean($_GET['email']));
+                    $sql = "SELECT validation_code FROM users WHERE email = '{$email}' AND validation_code = '{$validation_code}'";
+                        $result = query($sql);
+                        if(row_count($result) == 1) {
+                            confirm($result);
+                            $row = fetch_array($result);
+
+                            if($row['validation_code'] == $validation_code && $row['validation_code'] == $_POST['form_validation_code']) {
+                                $password = escape(clean(md5($_POST["password"])));
+                                $sql = "UPDATE users SET password = '{$password}' WHERE email = '{$email}' AND validation_code = '{$validation_code}'";
+                                $result = query($sql);
+                                echo success_message("You have successfully reset your password.");
+                                //redirect('login.php');
+                            }
+                        } else {
+                            redirect('login.php');
+                        }
+                    }
+                }
+            }
+        }
     }
 ?>

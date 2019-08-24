@@ -22,8 +22,12 @@
 
 	<div class="jumbotron">
 		<h1 class="text-center"><?php echo $_SESSION['username']; ?></h1>
-
+		<form method="post" enctype="multipart/form-data">
+			<input type="file" name="myfile">
+			<button name="btn">Upload</button>
+		</form>
 	</div>
+</div>
 
 </div> <!--Container-->
 

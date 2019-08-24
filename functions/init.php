@@ -5,5 +5,6 @@
 
     include("db.php");
     include("functions.php");
+    include("resume_upload.php");
 
 ?>

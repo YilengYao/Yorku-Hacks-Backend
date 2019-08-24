@@ -13,7 +13,7 @@
 				<div class="panel panel-login">
 					<div class="panel-heading">
 						<div class="row">
-						
+							<?php reset_password(); ?>
 							<div class="col-xs-12">
 								<h3>Reset Password</h3>
 							</div>
@@ -24,7 +24,9 @@
 						<div class="row">
 							<div class="col-lg-12">
 								<form id="register-form" method="post" role="form" >
-
+									<div class="form-group">
+										<input type="form_validation_code" name="form_validation_code" id="form_validation_code" tabindex="2" class="form-control" placeholder="Validation Code" required>
+									</div>
 									<div class="form-group">
 										<input type="password" name="password" id="password" tabindex="2" class="form-control" placeholder="Password" required>
 									</div>
