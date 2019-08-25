@@ -4,7 +4,11 @@
 <body>
 
 <?php include("includes/nav.php") ?>
-	
+<?php 	
+	if (logged_in()) {
+			redirect("candidate.php");
+	}
+?>
 <div class="container">
 
 	
@@ -13,7 +17,8 @@
 		<div class="col-lg-6 col-lg-offset-3">
 
 	
-		<h1 class="text-center"><?php display_message();?></h1>				
+		<h1 class="text-center"><?php display_message();?></h1>	
+		<?php validate_user_login() ?>			
 		</div>
 	</div>
     	<div class="row">
@@ -40,10 +45,6 @@
 									<div class="form-group">
 										<input type="password" name="password" id="login-
 										password" tabindex="2" class="form-control" placeholder="Password" required>
-									</div>
-									<div class="form-group text-center">
-										<input type="checkbox" tabindex="3" class="" name="remember" id="remember">
-										<label for="remember"> Remember Me</label>
 									</div>
 									<div class="form-group">
 										<div class="row">

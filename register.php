@@ -5,7 +5,11 @@
 
 
 <?php include("includes/nav.php"); ?>
-
+<?php 	
+if (logged_in()) {
+		redirect("candidate.php");
+}
+?>
 <div class="container">
 
 	<div class="row">
